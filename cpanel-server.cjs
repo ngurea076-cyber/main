@@ -1,7 +1,24 @@
 const http = require("node:http");
+const fs = require("node:fs");
+const path = require("node:path");
 
 const port = Number(process.env.PORT || 3000);
 const host = process.env.HOST || "0.0.0.0";
+const clientDir = path.join(__dirname, "dist", "client");
+
+const mimeTypes = {
+  ".css": "text/css; charset=utf-8",
+  ".html": "text/html; charset=utf-8",
+  ".js": "text/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".svg": "image/svg+xml",
+  ".webmanifest": "application/manifest+json; charset=utf-8",
+  ".ico": "image/x-icon",
+  ".txt": "text/plain; charset=utf-8",
+};
 
 function getRequestUrl(req) {
   const protocol = req.headers["x-forwarded-proto"] || "http";
@@ -38,6 +55,53 @@ async function sendResponse(nodeRes, webRes) {
   nodeRes.end(body);
 }
 
+function sendStaticFile(req, res) {
+  if (req.method !== "GET" && req.method !== "HEAD") {
+    return false;
+  }
+
+  let pathname;
+  try {
+    pathname = decodeURIComponent(new URL(getRequestUrl(req)).pathname);
+  } catch {
+    return false;
+  }
+
+  const relativePath = pathname === "/" ? "" : pathname.replace(/^\/+/, "");
+  if (!relativePath) {
+    return false;
+  }
+
+  const filePath = path.resolve(clientDir, relativePath);
+  if (!filePath.startsWith(clientDir + path.sep)) {
+    return false;
+  }
+
+  if (!fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
+    return false;
+  }
+
+  res.statusCode = 200;
+  res.setHeader("content-type", mimeTypes[path.extname(filePath).toLowerCase()] || "application/octet-stream");
+  res.setHeader("cache-control", filePath.includes(`${path.sep}assets${path.sep}`) ? "public, max-age=31536000, immutable" : "public, max-age=300");
+
+  if (req.method === "HEAD") {
+    res.end();
+    return true;
+  }
+
+  fs.createReadStream(filePath)
+    .on("error", (error) => {
+      console.error(error);
+      if (!res.headersSent) {
+        res.statusCode = 500;
+      }
+      res.end();
+    })
+    .pipe(res);
+  return true;
+}
+
 async function start() {
   const entry = await import("./dist/server/server.js");
   const app = entry.default;
@@ -48,6 +112,10 @@ async function start() {
 
   const server = http.createServer(async (req, res) => {
     try {
+      if (sendStaticFile(req, res)) {
+        return;
+      }
+
       const body = await readBody(req);
       const request = new Request(getRequestUrl(req), {
         method: req.method,
