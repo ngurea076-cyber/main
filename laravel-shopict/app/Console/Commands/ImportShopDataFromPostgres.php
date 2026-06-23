@@ -77,6 +77,15 @@ class ImportShopDataFromPostgres extends Command
             $query['sslmode'] ?? 'require'
         );
 
+        $options = $query['options'] ?? null;
+        if (! $options && str_ends_with($parts['host'], '.neon.tech')) {
+            $options = 'endpoint=' . explode('.', $parts['host'])[0];
+        }
+
+        if ($options) {
+            $dsn .= ';options=' . $options;
+        }
+
         return new PDO($dsn, rawurldecode($parts['user'] ?? ''), rawurldecode($parts['pass'] ?? ''), [
             PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
             PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
