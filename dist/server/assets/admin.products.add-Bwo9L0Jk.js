@@ -1,0 +1,32 @@
+import { AdminProductsPage } from "./admin.products.lazy-DVxcXHU2.js";
+import "react/jsx-runtime";
+import "@tanstack/react-router";
+import "@tanstack/react-query";
+import "react";
+import "./router-B4G_FXaH.js";
+import "sonner";
+import "lucide-react";
+import "clsx";
+import "tailwind-merge";
+import "./category-tree-BmC-Sh6N.js";
+import "./products-DQc7b5GA.js";
+import "./tanstack-vendor-DM2N0uEF.js";
+import "seroval";
+import "node:async_hooks";
+import "h3-v2";
+import "@tanstack/router-core";
+import "@tanstack/history";
+import "@tanstack/router-core/ssr/client";
+import "@tanstack/router-core/ssr/server";
+import "@tanstack/react-router/ssr/server";
+import "zod";
+import "@radix-ui/react-slot";
+import "class-variance-authority";
+import "@radix-ui/react-dialog";
+import "@radix-ui/react-checkbox";
+import "@radix-ui/react-popover";
+import "@radix-ui/react-select";
+const SplitComponent = AdminProductsPage;
+export {
+  SplitComponent as component
+};
